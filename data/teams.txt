@@ -1,0 +1,6 @@
+1 Liverpool 
+2 RealMadrid 
+3 Juventus 
+4 Barcelona 
+5 Manchester City 
+6 Chelsea 
