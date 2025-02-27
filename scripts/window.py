@@ -48,7 +48,12 @@ class Window:
     def __show_table(self):
         self.__teams = read_teams()
         self.__games = read_games(self.__teams)
-        self.tournament = Tournament(self.__games, self.__teams)
+        games_checked = []
+
+        for game in self.__games:
+            if game.get_game_status() == 'InProgress' or game.get_game_status() == 'Finished':
+                games_checked.append(game)
+        self.tournament = Tournament(games_checked, self.__teams)
         self.__home_team_var = tkinter.StringVar(value=self.__teams[0])
         self.__away_team_var = tkinter.StringVar(value=self.__teams[1])
 
