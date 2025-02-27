@@ -2,7 +2,7 @@ from data.config import TEAMS_PATH, GAMES_PATH
 from scripts.game import Game
 from scripts.team import Team
 
-def read_games(teams: list):
+def read_games(teams: list) -> list:
     games = []
     with open(GAMES_PATH, 'r') as games_file:
         while True:
@@ -11,13 +11,14 @@ def read_games(teams: list):
                 break
 
             array = line.split(' ')
-            game = Game(int(array[0]), find_name_by_id(teams, int(array[1])), find_name_by_id(teams, int(array[2])), int(array[3]), int(array[4]))
+            date = f"{array[5]} {array[6]} {array[7]}"
+            game = Game(int(array[0]), find_name_by_id(teams, int(array[1])), find_name_by_id(teams, int(array[2])), int(array[3]), int(array[4]), date)
             games.append(game)
         
         return games
 
 
-def read_teams():
+def read_teams() -> list:
     teams = []
     with open(TEAMS_PATH, 'r') as teams_file:
         while True:
