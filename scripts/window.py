@@ -108,13 +108,53 @@ class Window:
             for inputed in entries:
                 try:
                     a = int(inputed.get())
+                    if a < 0:
+                        tkinter.messagebox.showerror("Помилка", "Ви ввели не валідні дані")
+                        return
                 except:
                     tkinter.messagebox.showerror("Помилка", "Ви ввели не валідні дані")
                     return
+            
+            month_limites = {
+                1: 31,
+                2: 28,
+                3: 31,
+                4: 30,
+                5: 31,
+                6: 30,
+                7: 31,
+                8: 31,
+                9: 30,
+                10: 31,
+                11: 30,
+                12: 31
+            }
+
+            try:
+                date = date_entry.get().split(" ")
+                for num in date:
+                    num = int(num)
                 
+                date = [int(date[0]), int(date[1]), int(date[2])]
+
+                if date[0] < 0 or date[0] > 2100:
+                    tkinter.messagebox.showerror("Помилка", "Ви ввели неправильний рік")
+                    return
+                if date[1] <= 0 or date[1] > 12:
+                    tkinter.messagebox.showerror("Помилка", "Ви ввели неправильний місяць")
+                    return
+                if date[2] < 0 or date[2] > month_limites[date[1]]:
+                    tkinter.messagebox.showerror("Помилка", "Ви ввели неправильний день")
+                    return
+            except ValueError:
+                tkinter.messagebox.showerror("Помилка", "Ви ввели неправильний день")
+                return
+            
             game_id = self.__last_id + 1
 
-            write_game(game_id, __get_id_by_team(self, self.__home_team_var.get()), __get_id_by_team(self, self.__away_team_var.get()), home_score_entry.get(), away_score_entry.get())
+            date = f'{date[0]} {date[1]} {date[2]}'
+
+            write_game(game_id, __get_id_by_team(self, self.__home_team_var.get()), __get_id_by_team(self, self.__away_team_var.get()), home_score_entry.get(), away_score_entry.get(), date)
 
 
             for item in self.__items_adding:
@@ -141,25 +181,25 @@ class Window:
         main_label = tkinter.Label(self.__second_tab, text="Введіть дані гри", font=('Arial', 17))
         main_label.grid(row=0)
 
-        home_name_label = tkinter.Label(self.__second_tab, text='Виберіть назву домашньої команди', font=('Arial', 13))
-        home_name_label.grid(row=2, column=0, sticky='w')
+        team_names_label = tkinter.Label(self.__second_tab, text='Домашня-гостьова команди', font=('Arial', 13))
+        team_names_label.grid(row=2, column=0, sticky='w')
         home_name_dropdown = tkinter.OptionMenu(self.__second_tab, self.__home_team_var, *self.__teams)
         home_name_dropdown.grid(row=2, column=1)
-        away_name_label = tkinter.Label(self.__second_tab, text='Виберіть назву гостьової команди', font=('Arial', 13))
-        away_name_label.grid(row=3, column=0, sticky='w')
         away_name__dropdown = tkinter.OptionMenu(self.__second_tab, self.__away_team_var, *self.__teams)
-        away_name__dropdown.grid(row=3, column=1)
-        home_score_label = tkinter.Label(self.__second_tab, text='Введіть забиті голи домашньої команди', font=('Arial', 13))
-        home_score_label.grid(row=4, column=0, sticky='w')
-        home_score_entry = tkinter.Entry(self.__second_tab)
-        home_score_entry.grid(row=4, column=1)
-        away_score_label = tkinter.Label(self.__second_tab, text='Введіть забиті голи гостьової команди', font=('Arial', 13))
-        away_score_label.grid(row=5, column=0, sticky='w')
-        away_score_entry = tkinter.Entry(self.__second_tab)
-        away_score_entry.grid(row=5, column=1)
+        away_name__dropdown.grid(row=2, column=2)
+        scores_label = tkinter.Label(self.__second_tab, text='Голи домашньої-гостьової команд', font=('Arial', 13))
+        scores_label.grid(row=3, column=0, sticky='w')
+        home_score_entry = tkinter.Entry(self.__second_tab, width=7)
+        home_score_entry.grid(row=3, column=1)
+        away_score_entry = tkinter.Entry(self.__second_tab, width=7)
+        away_score_entry.grid(row=3, column=2)
+        date_label = tkinter.Label(self.__second_tab, text='Дата гри', font=('Arial', 13))
+        date_label.grid(row=4, column=0, sticky='w')
+        date_entry = tkinter.Entry(self.__second_tab, width=10)
+        date_entry.grid(row=4, column=1)
 
         continue_button = tkinter.Button(self.__second_tab, text="Продовжити", command=__write_game)
-        continue_button.grid(row=6)
+        continue_button.grid(row=5)
 
         entries = [home_score_entry, away_score_entry]
-        self.__items_adding = [main_label, home_name_dropdown, away_name__dropdown, home_name_label, away_name_label, away_score_entry, away_score_label, home_score_entry, home_score_label, continue_button]
+        self.__items_adding = [main_label, home_name_dropdown, away_name__dropdown, team_names_label, away_score_entry, home_score_entry, scores_label, continue_button, date_label, date_entry]
