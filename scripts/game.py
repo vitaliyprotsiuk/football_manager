@@ -5,6 +5,7 @@ class Game:
     __awayTeam = None
     __homeTeamScore = 0
     __awayTeamScore = 0
+    __date = None
 
     def __init__(self, id, homeTeam, awayTeam, homeTeamScore, awayTeamScore, match_date):
         self.__id = id
