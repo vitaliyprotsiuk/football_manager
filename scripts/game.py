@@ -1,10 +1,12 @@
 from datetime import date
+from database.db_connect import create_connection
 
 class Game:
     __homeTeam = None
     __awayTeam = None
     __homeTeamScore = 0
     __awayTeamScore = 0
+    __date = None
 
     def __init__(self, id, homeTeam, awayTeam, homeTeamScore, awayTeamScore, match_date):
         self.__id = id
@@ -41,5 +43,17 @@ class Game:
             return 'InProgress'
         else: return 'Finished'
     
+    def add_game(self):
+        request = f'''INSERT INTO Game(home_team_id, away_team_id, home_team_score, away_team_score, date_year, date_month, date_day)
+                      VALUES ({self.__homeTeam}, {self.__awayTeam}, {self.__homeTeamScore}, {self.__awayTeamScore}, {self.__date.year}, {self.__date.month}, {self.__date.day})'''
+        
+        connection = create_connection()
+        cursor = connection.get_cursor()
+
+        cursor.execute(request)
+
+        connection.commit()
+        connection.close_connection()
+
     def __str__(self):
-        return f"{self.__homeTeam} {self.__homeTeamScore} - {self.__awayTeam} {self.__awayTeamScore}"
+        return f"{self.__homeTeam} {self.__homeTeamScore} - {self.__awayTeam} {self.__awayTeamScore} date: {self.__date}"
