@@ -1,10 +1,22 @@
 import sqlite3
 
-def connect_db():
-    database_path = 'database\db'
+from data.config import DB_PATH
 
-    connection = sqlite3.connect(database_path)
+class Database:
+    def __init__(self):
+        self.connection = sqlite3.connect(DB_PATH)
 
-    cursor = connection.cursor()
+    def get_cursor(self):
+        cursor = self.connection.cursor() # create cursor to make requests
 
-    return cursor
+        return cursor
+    
+    def close_connection(self):
+        return self.connection.close()
+    
+    def commit(self):
+        return self.connection.commit()
+
+
+def create_connection():
+    return Database()

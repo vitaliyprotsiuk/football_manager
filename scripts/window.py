@@ -2,10 +2,11 @@ import tkinter
 import tkinter.messagebox
 
 
-from scripts.read_files import read_games, read_teams
+# from scripts.read_files import read_games, read_teams
 from tkinter import ttk
 from scripts.tournament import Tournament
 from scripts.write_files import write_game
+from data.get_data import *
 
 
 class Window:
@@ -46,17 +47,15 @@ class Window:
 
 
     def __show_table(self):
-        self.__teams = read_teams()
-        self.__games = read_games(self.__teams)
+        self.__teams = get_teams()
+        self.__games = get_games()
         games_checked = []
 
         for game in self.__games:
             if game.get_game_status() == 'InProgress' or game.get_game_status() == 'Finished':
                 games_checked.append(game)
+                
         self.tournament = Tournament(games_checked, self.__teams)
-        self.__home_team_var = tkinter.StringVar(value=self.__teams[0])
-        self.__away_team_var = tkinter.StringVar(value=self.__teams[1])
-
 
         def create_table():
             self.__table.heading('N', text='Name')
@@ -86,9 +85,9 @@ class Window:
 
 
     def __add_command(self):
-        def __get_id_by_team(self, team):
+        def __get_id_by_team(self, team_name):
             for finded_team in self.__teams:
-                if team == finded_team.get_name():
+                if finded_team.get_name() == team_name:
                     return finded_team.get_id()
 
 
@@ -98,8 +97,8 @@ class Window:
                     item.destroy()
 
                 # updating info for getting last id
-                self.__games = read_games(self.__teams)
-                self.__last_id = __get_last_id(self.__games)
+#                self.__games = get_games(self.__teams)
+#                self.__last_id = __get_last_id(self.__games)
 
                 continue_button.destroy()
                 self.__add_command()
@@ -150,12 +149,15 @@ class Window:
                 tkinter.messagebox.showerror("Помилка", "Ви ввели неправильний день")
                 return
             
-            game_id = self.__last_id + 1
+#            game_id = self.__last_id + 1
 
             date = f'{date[0]} {date[1]} {date[2]}'
 
-            write_game(game_id, __get_id_by_team(self, self.__home_team_var.get()), __get_id_by_team(self, self.__away_team_var.get()), home_score_entry.get(), away_score_entry.get(), date)
+#            write_game(game_id, __get_id_by_team(self, self.__home_team_var.get()), __get_id_by_team(self, self.__away_team_var.get()), home_score_entry.get(), away_score_entry.get(), date)
 
+            new_game = Game(None, __get_id_by_team(self, self.__home_team_var.get()), __get_id_by_team(self, self.__away_team_var.get()), home_score_entry.get(), away_score_entry.get(), date)
+            new_game.add_game()
+            self.__teams = get_teams()
 
             for item in self.__items_adding:
                 item.destroy()
@@ -175,7 +177,16 @@ class Window:
             return last_id
         
 
-        self.__last_id = __get_last_id(self.__games)
+#        self.__last_id = __get_last_id(self.__games)
+
+        def on_team_change(*args):
+            return
+
+        self.__home_team_var = tkinter.StringVar(value=self.__teams[0].get_name())
+        self.__away_team_var = tkinter.StringVar(value=self.__teams[1].get_name())
+
+        self.__home_team_var.trace_add("write", on_team_change)
+        self.__away_team_var.trace_add("write", on_team_change)
 
 
         main_label = tkinter.Label(self.__second_tab, text="Введіть дані гри", font=('Arial', 17))
@@ -183,17 +194,17 @@ class Window:
 
         team_names_label = tkinter.Label(self.__second_tab, text='Домашня-гостьова команди', font=('Arial', 13))
         team_names_label.grid(row=2, column=0, sticky='w')
-        home_name_dropdown = tkinter.OptionMenu(self.__second_tab, self.__home_team_var, *self.__teams)
+        home_name_dropdown = tkinter.OptionMenu(self.__second_tab, self.__home_team_var, *[team.get_name() for team in self.__teams], command=lambda _: on_team_change())
+        away_name_dropdown = tkinter.OptionMenu(self.__second_tab, self.__away_team_var, *[team.get_name() for team in self.__teams], command=lambda _: on_team_change())
         home_name_dropdown.grid(row=2, column=1)
-        away_name__dropdown = tkinter.OptionMenu(self.__second_tab, self.__away_team_var, *self.__teams)
-        away_name__dropdown.grid(row=2, column=2)
+        away_name_dropdown.grid(row=2, column=2)
         scores_label = tkinter.Label(self.__second_tab, text='Голи домашньої-гостьової команд', font=('Arial', 13))
         scores_label.grid(row=3, column=0, sticky='w')
         home_score_entry = tkinter.Entry(self.__second_tab, width=7)
         home_score_entry.grid(row=3, column=1)
         away_score_entry = tkinter.Entry(self.__second_tab, width=7)
         away_score_entry.grid(row=3, column=2)
-        date_label = tkinter.Label(self.__second_tab, text='Дата гри', font=('Arial', 13))
+        date_label = tkinter.Label(self.__second_tab, text='Дата гри(приклад: 2025 3 20)', font=('Arial', 13))
         date_label.grid(row=4, column=0, sticky='w')
         date_entry = tkinter.Entry(self.__second_tab, width=10)
         date_entry.grid(row=4, column=1)
@@ -202,4 +213,4 @@ class Window:
         continue_button.grid(row=5)
 
         entries = [home_score_entry, away_score_entry]
-        self.__items_adding = [main_label, home_name_dropdown, away_name__dropdown, team_names_label, away_score_entry, home_score_entry, scores_label, continue_button, date_label, date_entry]
+        self.__items_adding = [main_label, home_name_dropdown, away_name_dropdown, team_names_label, away_score_entry, home_score_entry, scores_label, continue_button, date_label, date_entry]
