@@ -14,4 +14,4 @@ class League:
         return self.__id
     
     def __str__(self):
-        return f'{self.__id} {self.__name} {self.__teams}'
+        return f'id: {self.__id} name: {self.__name} teams: {self.__teams}'
