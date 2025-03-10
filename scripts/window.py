@@ -17,6 +17,8 @@ class Window:
         self.__first_tab = ttk.Frame(self.__tab_control)
         self.__second_tab = ttk.Frame(self.__tab_control)
         self.__table = ttk.Treeview(self.__first_tab, columns=['N', 'W', 'D', 'L', 'P'], show='headings', height=450)
+        self.__leagues = get_leagues()
+        self.__league_name_var = tkinter.StringVar(value=self.__leagues[0].get_name())
 
         # addition tabs
         self.__tab_control.add(self.__first_tab, text='Турнірна таблиця')
@@ -30,6 +32,9 @@ class Window:
     def __update_info(self, event=None):
         for item in self.__table.get_children():
             self.__table.delete(item)
+
+        self.__leagues_optmenu.destroy()
+        
                 
         self.__show_table()
 
@@ -47,10 +52,40 @@ class Window:
 
 
     def __show_table(self):
-        self.__teams = get_teams()
-        self.__games = get_games()
-        games_checked = []
+        self.__leagues_optmenu = tkinter.OptionMenu(self.__first_tab, self.__league_name_var, *[leag_name.get_name() for leag_name in self.__leagues], command=self.__update_info)
+        self.__leagues_optmenu.grid(row=0, column=0)
 
+        league_name = self.__league_name_var.get()
+        self.__league = self.__leagues[0]
+        if len(self.__leagues) > 1:
+            for i in range(1, len(self.__leagues)):
+                if self.__leagues[i].get_name() == league_name:
+                    self.__league = self.__leagues[i]
+                    break
+                else: continue
+
+        team_names = self.__league.get_teams()
+        teams = get_teams()
+        self.__teams = []
+
+        for team_name in team_names:
+            teams_names = [team.get_name() for team in teams]
+
+            for team in teams:
+                if team.get_name() == team_name:
+                    self.__teams.append(team)
+                    break
+
+        games = get_games()
+        self.__games = []
+
+        for game in games:
+            tn = [team.get_name() for team in self.__teams]
+            if game.get_home_team().get_name() in tn \
+            and game.get_away_team().get_name() in tn:
+                self.__games.append(game)
+
+        games_checked = []
         for game in self.__games:
             if game.get_game_status() == 'InProgress' or game.get_game_status() == 'Finished':
                 games_checked.append(game)
