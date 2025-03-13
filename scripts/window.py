@@ -4,7 +4,7 @@ import tkinter.messagebox
 from tkinter import ttk
 from scripts.tournament import Tournament
 from data.get_data import *
-from scripts.add_data import write_game
+from scripts.add_data import write_game, write_league
 
 
 class Window:
@@ -15,14 +15,17 @@ class Window:
         self.__first_tab = ttk.Frame(self.__tab_control)
         self.__second_tab = ttk.Frame(self.__tab_control)
         self.__third_tab = ttk.Frame(self.__tab_control)
+        self.__fourth_tab = ttk.Frame(self.__tab_control)
         self.__table = ttk.Treeview(self.__first_tab, columns=['N', 'W', 'D', 'L', 'P'], show='headings', height=450)
         self.__leagues = get_leagues()
+        self.__league_names = [leag.get_name() for leag in self.__leagues]
         self.__league_name_var = tkinter.StringVar(value=self.__leagues[0].get_name())
 
         # addition tabs
         self.__tab_control.add(self.__first_tab, text='Турнірна таблиця')
         self.__tab_control.add(self.__second_tab, text='Додати гру')
         self.__tab_control.add(self.__third_tab, text='Додати команду')
+        self.__tab_control.add(self.__fourth_tab, text='Додати лігу')
 
         self.__tab_control.grid()
 
@@ -33,10 +36,33 @@ class Window:
         for item in self.__table.get_children():
             self.__table.delete(item)
 
+        self.__leagues = get_leagues()
+        self.__league_names = [leag.get_name() for leag in self.__leagues]
+
         self.__leagues_optmenu.destroy()
+
+        try:
+            for item in self.__extra_game_items:
+                item.destroy()
+        except:
+            pass
+
+        try:
+            for item in self.__extra_command_items:
+                item.destroy()
+        except:
+            pass
         
+        for item in self.__game_items:
+            item.destroy()
+        
+        for item in self.__command_items:
+            item.destroy()
+
                 
         self.__show_table()
+        self.__add_command()
+        self.__add_game()
 
         return "break"
 
@@ -48,6 +74,7 @@ class Window:
         self.__show_table()
         self.__add_game()
         self.__add_command()
+        self.__add_league()
 
         self.window.mainloop()
 
@@ -129,7 +156,7 @@ class Window:
 
         def __write_game():
             def __continue_clicked():
-                for item in self.__items_adding:
+                for item in self.__game_items:
                     item.destroy()
                     
                 continue_button.destroy()
@@ -191,7 +218,7 @@ class Window:
             new_game.add_game()
             self.__teams = get_teams()
 
-            for item in self.__items_adding:
+            for item in self.__game_items:
                 item.destroy()
             
             done_label = tkinter.Label(self.__second_tab, text='Готово✅', font=('Arial', 15))
@@ -199,6 +226,8 @@ class Window:
 
             continue_button = tkinter.Button(self.__second_tab, text='Продовжити', font=('Arial', 9), command=__continue_clicked)
             continue_button.grid(row=1)
+
+            self.__extra_game_items = [done_label, continue_button]
 
         
         # get last id
@@ -214,8 +243,8 @@ class Window:
         def on_team_change(*args):
             return
 
-        self.__home_team_var = tkinter.StringVar(value=self.__teams[0].get_name())
-        self.__away_team_var = tkinter.StringVar(value=self.__teams[1].get_name())
+        self.__home_team_var = tkinter.StringVar(value=get_teams()[0].get_name())
+        self.__away_team_var = tkinter.StringVar(value=get_teams()[1].get_name())
 
         self.__home_team_var.trace_add("write", on_team_change)
         self.__away_team_var.trace_add("write", on_team_change)
@@ -226,8 +255,8 @@ class Window:
 
         team_names_label = tkinter.Label(self.__second_tab, text='Домашня-гостьова команди', font=('Arial', 13))
         team_names_label.grid(row=2, column=0, sticky='w')
-        home_name_dropdown = tkinter.OptionMenu(self.__second_tab, self.__home_team_var, *[team.get_name() for team in self.__teams], command=lambda _: on_team_change())
-        away_name_dropdown = tkinter.OptionMenu(self.__second_tab, self.__away_team_var, *[team.get_name() for team in self.__teams], command=lambda _: on_team_change())
+        home_name_dropdown = tkinter.OptionMenu(self.__second_tab, self.__home_team_var, *[team.get_name() for team in get_teams()], command=lambda _: on_team_change())
+        away_name_dropdown = tkinter.OptionMenu(self.__second_tab, self.__away_team_var, *[team.get_name() for team in get_teams()], command=lambda _: on_team_change())
         home_name_dropdown.grid(row=2, column=1)
         away_name_dropdown.grid(row=2, column=2)
         scores_label = tkinter.Label(self.__second_tab, text='Голи домашньої-гостьової команд', font=('Arial', 13))
@@ -245,7 +274,7 @@ class Window:
         continue_button.grid(row=5)
 
         entries = [home_score_entry, away_score_entry]
-        self.__items_adding = [main_label, home_name_dropdown, away_name_dropdown, team_names_label, away_score_entry, home_score_entry, scores_label, continue_button, date_label, date_entry]
+        self.__game_items = [main_label, home_name_dropdown, away_name_dropdown, team_names_label, away_score_entry, home_score_entry, scores_label, continue_button, date_label, date_entry]
 
 
     def __add_command(self):
@@ -261,7 +290,11 @@ class Window:
             team_name = name_enrty.get()
             league_name = league_name_var.get()
 
-            for item in items:
+            if write_game(team_name, league_name) == 'exists':
+                tkinter.messagebox.showerror('Помилка', 'Команда з такою назвою вже існує')
+                return
+
+            for item in self.__command_items:
                 item.destroy()
 
             done_label = tkinter.Label(self.__third_tab, text='Готово✅', font=('Arial', 15))
@@ -269,25 +302,60 @@ class Window:
 
             repeat_button = tkinter.Button(self.__third_tab, text='Продовжити', command=repeat)
             repeat_button.grid(row=1)
-            
-            write_game(team_name, league_name)
+
+            self.__extra_command_items = [done_label, repeat_button]
 
 
         league_name_var = tkinter.StringVar(value=self.__leagues[0].get_name())
-        league_names = [leag.get_name() for leag in self.__leagues]
 
         # UI
-        name_label = tkinter.Label(self.__third_tab, text='Введіть назву команди', font=('Arial', 13))
+        name_label = tkinter.Label(self.__third_tab, text='Назва команди', font=('Arial', 13))
         name_label.grid(row=0, column=0)
         name_enrty = tkinter.Entry(self.__third_tab, width=10, justify='center')
         name_enrty.grid(row=0, column=1)
 
-        league_label = tkinter.Label(self.__third_tab, text='Виберіть лігу', font=('Arial', 13))
+        league_label = tkinter.Label(self.__third_tab, text='Ліга', font=('Arial', 13))
         league_label.grid(row=1, column=0)
-        league_drop = tkinter.OptionMenu(self.__third_tab, league_name_var, *league_names)
+        league_drop = tkinter.OptionMenu(self.__third_tab, league_name_var, *self.__league_names)
         league_drop.grid(row=1, column=1)
 
         continue_button = tkinter.Button(self.__third_tab, text='Продовжити', command=continue_clicked, justify='center')
         continue_button.grid(row=2)
 
-        items = [name_enrty, name_label, league_drop, league_label, continue_button]
+        self.__command_items = [name_enrty, name_label, league_drop, league_label, continue_button]
+
+
+    def __add_league(self):
+        def continue_clicked():
+            def repeat():
+                done_label.destroy()
+                repeat_button.destroy()
+                
+                self.__add_league()
+
+            league_name = league_name_entry.get()
+
+            if write_league(league_name) == 'exists':
+                tkinter.messagebox.showerror('Помилка', 'Ліга з такою назвою вже існує')
+                return
+
+            for item in items:
+                item.destroy()
+
+            done_label = tkinter.Label(self.__fourth_tab, text='Готово✅', font=('Arial', 15))
+            done_label.grid(row=0, column=0)
+
+            repeat_button = tkinter.Button(self.__fourth_tab, text='Продовжити', command=repeat)
+            repeat_button.grid(row=1)
+            
+
+        # UI
+        league_name_label = tkinter.Label(self.__fourth_tab, text='Назва ліги', font=('Arial', 13))
+        league_name_label.grid(row=0)
+        league_name_entry = tkinter.Entry(self.__fourth_tab)
+        league_name_entry.grid(row=0, column=1)
+
+        continue_button = tkinter.Button(self.__fourth_tab, text='Продовжити', command=continue_clicked)
+        continue_button.grid(row=1)
+
+        items = [league_name_entry, league_name_label, continue_button]
