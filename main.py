@@ -1,5 +1,5 @@
 from scripts.window import Window
-from data.get_data import get_leagues
+from scripts.add_data import write_game
  
 # creating window
 Window()

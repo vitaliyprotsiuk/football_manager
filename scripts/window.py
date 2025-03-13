@@ -1,12 +1,10 @@
 import tkinter
 import tkinter.messagebox
 
-
-# from scripts.read_files import read_games, read_teams
 from tkinter import ttk
 from scripts.tournament import Tournament
-from scripts.write_files import write_game
 from data.get_data import *
+from scripts.add_data import write_game
 
 
 class Window:
@@ -16,6 +14,7 @@ class Window:
         self.__tab_control.bind("<ButtonRelease-1>", self.__update_info) # to update info in table when tab changed
         self.__first_tab = ttk.Frame(self.__tab_control)
         self.__second_tab = ttk.Frame(self.__tab_control)
+        self.__third_tab = ttk.Frame(self.__tab_control)
         self.__table = ttk.Treeview(self.__first_tab, columns=['N', 'W', 'D', 'L', 'P'], show='headings', height=450)
         self.__leagues = get_leagues()
         self.__league_name_var = tkinter.StringVar(value=self.__leagues[0].get_name())
@@ -23,6 +22,7 @@ class Window:
         # addition tabs
         self.__tab_control.add(self.__first_tab, text='Турнірна таблиця')
         self.__tab_control.add(self.__second_tab, text='Додати гру')
+        self.__tab_control.add(self.__third_tab, text='Додати команду')
 
         self.__tab_control.grid()
 
@@ -46,6 +46,7 @@ class Window:
         self.window.resizable(False, False)
 
         self.__show_table()
+        self.__add_game()
         self.__add_command()
 
         self.window.mainloop()
@@ -119,7 +120,7 @@ class Window:
         create_table()
 
 
-    def __add_command(self):
+    def __add_game(self):
         def __get_id_by_team(self, team_name):
             for finded_team in self.__teams:
                 if finded_team.get_name() == team_name:
@@ -130,13 +131,9 @@ class Window:
             def __continue_clicked():
                 for item in self.__items_adding:
                     item.destroy()
-
-                # updating info for getting last id
-#                self.__games = get_games(self.__teams)
-#                self.__last_id = __get_last_id(self.__games)
-
+                    
                 continue_button.destroy()
-                self.__add_command()
+                self.__add_game()
 
 
             for inputed in entries:
@@ -249,3 +246,48 @@ class Window:
 
         entries = [home_score_entry, away_score_entry]
         self.__items_adding = [main_label, home_name_dropdown, away_name_dropdown, team_names_label, away_score_entry, home_score_entry, scores_label, continue_button, date_label, date_entry]
+
+
+    def __add_command(self):
+        # Continue button clicked function
+        def continue_clicked():
+            def repeat():
+                done_label.destroy()
+                repeat_button.destroy()
+                
+                self.__add_command()
+                
+
+            team_name = name_enrty.get()
+            league_name = league_name_var.get()
+
+            for item in items:
+                item.destroy()
+
+            done_label = tkinter.Label(self.__third_tab, text='Готово✅', font=('Arial', 15))
+            done_label.grid(row=0, column=0)
+
+            repeat_button = tkinter.Button(self.__third_tab, text='Продовжити', command=repeat)
+            repeat_button.grid(row=1)
+            
+            write_game(team_name, league_name)
+
+
+        league_name_var = tkinter.StringVar(value=self.__leagues[0].get_name())
+        league_names = [leag.get_name() for leag in self.__leagues]
+
+        # UI
+        name_label = tkinter.Label(self.__third_tab, text='Введіть назву команди', font=('Arial', 13))
+        name_label.grid(row=0, column=0)
+        name_enrty = tkinter.Entry(self.__third_tab, width=10, justify='center')
+        name_enrty.grid(row=0, column=1)
+
+        league_label = tkinter.Label(self.__third_tab, text='Виберіть лігу', font=('Arial', 13))
+        league_label.grid(row=1, column=0)
+        league_drop = tkinter.OptionMenu(self.__third_tab, league_name_var, *league_names)
+        league_drop.grid(row=1, column=1)
+
+        continue_button = tkinter.Button(self.__third_tab, text='Продовжити', command=continue_clicked, justify='center')
+        continue_button.grid(row=2)
+
+        items = [name_enrty, name_label, league_drop, league_label, continue_button]

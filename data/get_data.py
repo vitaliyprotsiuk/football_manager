@@ -102,4 +102,6 @@ def get_leagues():
 
         leagues.append(league)
 
+    connection.close_connection()
+
     return leagues
